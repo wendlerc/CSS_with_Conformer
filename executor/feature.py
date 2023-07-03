@@ -16,6 +16,37 @@ EPSILON = th.finfo(th.float32).eps
 MATH_PI = math.pi
 
 
+def _rfft(x, signal_ndim=1, onesided=True):
+    # b = torch.Tensor([[1,2,3,4,5],[2,3,4,5,6]])
+    # b = torch.Tensor([[1,2,3,4,5,6],[2,3,4,5,6,7]])
+    # torch 1.8.0 torch.fft.rfft to torch 1.5.0 torch.rfft as signal_ndim=1
+    # written by mzero
+    odd_shape1 = (x.shape[1] % 2 != 0)
+    x = th.fft.rfft(x)
+    x = th.cat([x.real.unsqueeze(dim=2), x.imag.unsqueeze(dim=2)], dim=2)
+    if onesided == False:
+        _x = x[:, 1:, :].flip(dims=[1]).clone() if odd_shape1 else x[:, 1:-1, :].flip(dims=[1]).clone()
+        _x[:,:,1] = -1 * _x[:,:,1]
+        x = th.cat([x, _x], dim=1)
+    return x
+
+"""
+def _irfft(x, signal_ndim=1, onesided=True):
+# b = torch.Tensor([[1,2,3,4,5],[2,3,4,5,6]])
+# b = torch.Tensor([[1,2,3,4,5,6],[2,3,4,5,6,7]])
+# torch 1.8.0 torch.fft.irfft to torch 1.5.0 torch.irfft as signal_ndim=1
+# written by mzero
+if onesided == False:
+res_shape1 = x.shape[1]
+x = x[:,:(x.shape[1] // 2 + 1),:]
+x = torch.complex(x[:,:,0].float(), x[:,:,1].float())
+x = torch.fft.irfft(x, n=res_shape1)
+else:
+x = torch.complex(x[:,:,0].float(), x[:,:,1].float())
+x = torch.fft.irfft(x)
+return x
+"""
+
 def init_kernel(frame_len,
                 frame_hop,
                 normalize=True,
@@ -35,7 +66,8 @@ def init_kernel(frame_len,
     else:
         S = 1
     # F x N/2+1 x 2
-    K = th.rfft(th.eye(N) / S, 1)[:frame_len]
+    #K = th.rfft(th.eye(N) / S, 1)[:frame_len]
+    K = _rfft(th.eye(N) / S, signal_ndim=1)[:frame_len]
     # 2 x N/2+1 x F
     K = th.transpose(K, 0, 2) * W
     # N+2 x 1 x F
