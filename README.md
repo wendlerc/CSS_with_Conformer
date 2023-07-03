@@ -9,7 +9,7 @@ Experimental results using the LibriCSS dataset show that the Conformer separati
 For a detailed description and experimental results, please refer to our paper: [Continuous Speech Separation with Conformer](https://arxiv.org/abs/2008.05773) (Accepted by ICASSP 2021).
 
 ## Environment
-python 3.6.9, torch 1.7.1
+python 3.10.9, torch 2.0.1+cu118
 
 ## Get Started
 1. Download the overlapped speech of [LibriCSS dataset](https://github.com/chenzhuo1011/libri_css).
